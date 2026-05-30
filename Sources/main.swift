@@ -6,6 +6,7 @@ struct Config {
     let minHoldMs: Int
     let submitDelayMs: Int
     let triggerModifier: Modifier
+    let triggerSide: TriggerSide
     let submitKey: KeyboardKey
     let cancelKey: KeyboardKey?
     let showHint: Bool
@@ -21,6 +22,7 @@ struct Config {
             minHoldMs: intValue(env["CCVS_MIN_HOLD_MS"], defaultValue: 650),
             submitDelayMs: intValue(env["CCVS_SUBMIT_DELAY_MS"], defaultValue: 900),
             triggerModifier: Modifier.parse(env["CCVS_TRIGGER_MODIFIER"]) ?? .command,
+            triggerSide: TriggerSide.parse(env["CCVS_TRIGGER_SIDE"]) ?? .left,
             submitKey: KeyboardKey.parse(env["CCVS_SUBMIT_KEY"]) ?? .returnKey,
             cancelKey: KeyboardKey.parseOptional(env["CCVS_CANCEL_KEY"], defaultValue: .escape),
             showHint: boolValue(env["CCVS_SHOW_HINT"], defaultValue: true),
@@ -36,12 +38,14 @@ struct Config {
 struct Modifier {
     let name: String
     let flag: CGEventFlags
+    let leftKeyCode: Int64
+    let rightKeyCode: Int64
     let keyCodes: Set<Int64>
 
-    static let command = Modifier(name: "command", flag: .maskCommand, keyCodes: [54, 55])
-    static let control = Modifier(name: "control", flag: .maskControl, keyCodes: [59, 62])
-    static let option = Modifier(name: "option", flag: .maskAlternate, keyCodes: [58, 61])
-    static let shift = Modifier(name: "shift", flag: .maskShift, keyCodes: [56, 60])
+    static let command = Modifier(name: "command", flag: .maskCommand, leftKeyCode: 55, rightKeyCode: 54, keyCodes: [54, 55])
+    static let control = Modifier(name: "control", flag: .maskControl, leftKeyCode: 59, rightKeyCode: 62, keyCodes: [59, 62])
+    static let option = Modifier(name: "option", flag: .maskAlternate, leftKeyCode: 58, rightKeyCode: 61, keyCodes: [58, 61])
+    static let shift = Modifier(name: "shift", flag: .maskShift, leftKeyCode: 56, rightKeyCode: 60, keyCodes: [56, 60])
 
     static func parse(_ raw: String?) -> Modifier? {
         switch raw?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
@@ -55,6 +59,27 @@ struct Modifier {
             return .option
         case "shift":
             return .shift
+        default:
+            return nil
+        }
+    }
+}
+
+enum TriggerSide: String {
+    case left
+    case right
+    case any
+
+    static func parse(_ raw: String?) -> TriggerSide? {
+        switch raw?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case nil, "":
+            return nil
+        case "left", "l":
+            return .left
+        case "right", "r":
+            return .right
+        case "any", "both", "all":
+            return .any
         default:
             return nil
         }
@@ -151,7 +176,7 @@ final class CommandVoiceSubmitter {
         CGEvent.tapEnable(tap: tap, enable: true)
 
         let cancelDescription = config.cancelKey.map { "，\( $0.name ) 可取消本次发送" } ?? ""
-        log("已启动：\(config.triggerModifier.name) 单独保持 >= \(config.minHoldMs)ms，松开后 \(config.submitDelayMs)ms 自动发送 \(config.submitKey.name)\(cancelDescription)。")
+        log("已启动：\(config.triggerSide.rawValue) \(config.triggerModifier.name) 单独保持 >= \(config.minHoldMs)ms，松开后 \(config.submitDelayMs)ms 自动发送 \(config.submitKey.name)\(cancelDescription)。")
         CFRunLoopRun()
     }
 
@@ -192,13 +217,14 @@ final class CommandVoiceSubmitter {
     private func handleFlagsChanged(_ event: CGEvent) {
         let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
         let triggerIsDown = event.flags.contains(config.triggerModifier.flag)
+        let triggerKeyChanged = isConfiguredTriggerKey(keyCode)
 
-        if triggerDownAt != nil && triggerIsDown && !config.triggerModifier.keyCodes.contains(keyCode) {
+        if triggerDownAt != nil && triggerIsDown && !triggerKeyChanged {
             triggerSoloSince = nil
             log("\(config.triggerModifier.name) 期间检测到其他修饰键按下：\(keyCode)")
         }
 
-        if triggerIsDown && !lastTriggerFlags {
+        if triggerIsDown && !lastTriggerFlags && triggerKeyChanged {
             triggerDownAt = DispatchTime.now()
             triggerSoloSince = triggerDownAt
             currentGestureCanceled = false
@@ -206,7 +232,7 @@ final class CommandVoiceSubmitter {
             log("\(config.triggerModifier.name) down")
         }
 
-        if triggerDownAt != nil && triggerIsDown && !config.triggerModifier.keyCodes.contains(keyCode) && onlyTriggerModifierIsDown(event.flags, trigger: config.triggerModifier) {
+        if triggerDownAt != nil && triggerIsDown && !triggerKeyChanged && onlyTriggerModifierIsDown(event.flags, trigger: config.triggerModifier) {
             triggerSoloSince = DispatchTime.now()
             log("其他修饰键松开，开始重新计算 \(config.triggerModifier.name) 单独保持时长：\(keyCode)")
         }
@@ -228,6 +254,17 @@ final class CommandVoiceSubmitter {
         }
 
         lastTriggerFlags = triggerIsDown
+    }
+
+    private func isConfiguredTriggerKey(_ keyCode: Int64) -> Bool {
+        switch config.triggerSide {
+        case .any:
+            return config.triggerModifier.keyCodes.contains(keyCode)
+        case .left:
+            return keyCode == config.triggerModifier.leftKeyCode
+        case .right:
+            return keyCode == config.triggerModifier.rightKeyCode
+        }
     }
 
     private func heldDurationMs() -> Int {
@@ -360,13 +397,13 @@ final class HintOverlay {
 
     init() {
         label = NSTextField(labelWithString: "")
-        label.font = NSFont.systemFont(ofSize: 15, weight: .medium)
+        label.font = NSFont.systemFont(ofSize: 13, weight: .medium)
         label.textColor = .white
         label.alignment = .center
         label.lineBreakMode = .byTruncatingTail
 
         window = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 54),
+            contentRect: NSRect(x: 0, y: 0, width: 230, height: 34),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: true
@@ -374,7 +411,7 @@ final class HintOverlay {
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .transient, .ignoresCycle]
         window.isOpaque = false
-        window.backgroundColor = NSColor.black.withAlphaComponent(0.72)
+        window.backgroundColor = NSColor.black.withAlphaComponent(0.56)
         window.hasShadow = true
         window.ignoresMouseEvents = true
         window.contentView = label
@@ -398,7 +435,7 @@ final class HintOverlay {
         let size = window.frame.size
         let origin = NSPoint(
             x: frame.midX - size.width / 2,
-            y: frame.minY + 120
+            y: frame.minY + 82
         )
         window.setFrameOrigin(origin)
     }
@@ -497,6 +534,7 @@ if arguments.contains("--help") || arguments.contains("-h") {
       CCVS_MIN_HOLD_MS       默认 650
       CCVS_SUBMIT_DELAY_MS   默认 900
       CCVS_TRIGGER_MODIFIER  默认 command，可选 command/control/option/shift
+      CCVS_TRIGGER_SIDE      默认 left，可选 left/right/any
       CCVS_SUBMIT_KEY        默认 return，可选 return/tab/space/escape
       CCVS_CANCEL_KEY        默认 escape，可选 return/tab/space/escape/none
       CCVS_SHOW_HINT         默认 1
@@ -518,6 +556,7 @@ if arguments.contains("--check") {
     print("minHoldMs=\(config.minHoldMs)")
     print("submitDelayMs=\(config.submitDelayMs)")
     print("triggerModifier=\(config.triggerModifier.name)")
+    print("triggerSide=\(config.triggerSide.rawValue)")
     print("submitKey=\(config.submitKey.name)")
     print("cancelKey=\(config.cancelKey?.name ?? "none")")
     print("showHint=\(config.showHint)")

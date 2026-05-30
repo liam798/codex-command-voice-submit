@@ -42,6 +42,8 @@ cat > "$PLIST_PATH" <<PLIST
     <string>${CCVS_SUBMIT_DELAY_MS:-900}</string>
     <key>CCVS_TRIGGER_MODIFIER</key>
     <string>${CCVS_TRIGGER_MODIFIER:-command}</string>
+    <key>CCVS_TRIGGER_SIDE</key>
+    <string>${CCVS_TRIGGER_SIDE:-left}</string>
     <key>CCVS_SUBMIT_KEY</key>
     <string>${CCVS_SUBMIT_KEY:-return}</string>
     <key>CCVS_CANCEL_KEY</key>

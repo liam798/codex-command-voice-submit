@@ -12,7 +12,7 @@
 
 ## 行为
 
-- 默认监听 `Command` 的按下与松开，也可配置为 `Control` / `Option` / `Shift`。
+- 默认只监听左侧 `Command` 的按下与松开，也可配置为右侧或两侧，以及 `Control` / `Option` / `Shift`。
 - 默认要求按住至少 `650ms`。
 - 如果按住 `Command` 期间又按了其他普通键，会判定为正常快捷键，不会自动发送。
 - 只在前台应用名称或 bundle id 匹配 Codex / Code X 时触发。
@@ -81,6 +81,13 @@ CCVS_MIN_HOLD_MS=800 CCVS_SUBMIT_DELAY_MS=500 make install
 CCVS_TRIGGER_MODIFIER=control CCVS_SUBMIT_KEY=tab make install
 ```
 
+改成右侧 Command 或左右 Command 都触发：
+
+```bash
+CCVS_TRIGGER_SIDE=right make install
+CCVS_TRIGGER_SIDE=any make install
+```
+
 改成按 `Space` 取消，或禁用取消键：
 
 ```bash
@@ -110,6 +117,7 @@ make install
 | `CCVS_MIN_HOLD_MS` | `650` | Command 按住多久才触发 |
 | `CCVS_SUBMIT_DELAY_MS` | `900` | 松开后等待多久再发送 Return |
 | `CCVS_TRIGGER_MODIFIER` | `command` | 触发修饰键，可选 `command` / `control` / `option` / `shift` |
+| `CCVS_TRIGGER_SIDE` | `left` | 触发键侧，可选 `left` / `right` / `any` |
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
 | `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
 | `CCVS_SHOW_HINT` | `1` | 是否显示取消提示浮层 |

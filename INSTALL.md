@@ -197,7 +197,7 @@ tail -80 ~/Library/Logs/codex-command-voice-submit.log
 
 1. 打开 Codex / Code X。
 2. 聚焦输入框。
-3. 长按 `Command` 进行语音输入。
+3. 长按左侧 `Command` 进行语音输入。
 4. 松开 `Command`。
 5. 工具会默认等待 `900ms`，然后自动发送 `Return`。
 
@@ -232,6 +232,14 @@ CCVS_MIN_HOLD_MS=800 CCVS_SUBMIT_DELAY_MS=500 make install
 CCVS_TRIGGER_MODIFIER=control CCVS_SUBMIT_KEY=tab make install
 ```
 
+配置触发键的左右侧：
+
+```bash
+CCVS_TRIGGER_SIDE=left make install
+CCVS_TRIGGER_SIDE=right make install
+CCVS_TRIGGER_SIDE=any make install
+```
+
 配置取消键，或禁用取消：
 
 ```bash
@@ -261,6 +269,7 @@ make install
 | `CCVS_MIN_HOLD_MS` | `650` | Command 按住多久才触发 |
 | `CCVS_SUBMIT_DELAY_MS` | `900` | 松开后等待多久再发送 Return |
 | `CCVS_TRIGGER_MODIFIER` | `command` | 触发修饰键，可选 `command` / `control` / `option` / `shift` |
+| `CCVS_TRIGGER_SIDE` | `left` | 触发键侧，可选 `left` / `right` / `any` |
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
 | `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
 | `CCVS_SHOW_HINT` | `1` | 是否显示取消提示浮层 |
