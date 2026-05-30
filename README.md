@@ -17,6 +17,7 @@
 - 如果按住 `Command` 期间又按了其他普通键，会判定为正常快捷键，不会自动发送。
 - 只在前台应用名称或 bundle id 匹配 Codex / Code X 时触发。
 - 松开后默认等待 `900ms` 再发送 `Return`，给语音输入一点落字时间。
+- 默认按 `Escape` 可取消本次自动发送：按住触发键期间或松开后的等待窗口内都有效。
 
 ## 构建
 
@@ -79,6 +80,13 @@ CCVS_MIN_HOLD_MS=800 CCVS_SUBMIT_DELAY_MS=500 make install
 CCVS_TRIGGER_MODIFIER=control CCVS_SUBMIT_KEY=tab make install
 ```
 
+改成按 `Space` 取消，或禁用取消键：
+
+```bash
+CCVS_CANCEL_KEY=space make install
+CCVS_CANCEL_KEY=none make install
+```
+
 支持多个 App 名称和 bundle id，使用英文逗号分隔：
 
 ```bash
@@ -95,6 +103,7 @@ make install
 | `CCVS_SUBMIT_DELAY_MS` | `900` | 松开后等待多久再发送 Return |
 | `CCVS_TRIGGER_MODIFIER` | `command` | 触发修饰键，可选 `command` / `control` / `option` / `shift` |
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
+| `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
 | `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | 前台应用名称匹配，逗号分隔 |
 | `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | 前台应用 bundle id 匹配，逗号分隔 |
 | `CCVS_VERBOSE` | `0` | 是否输出调试日志 |

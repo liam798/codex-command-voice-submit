@@ -7,6 +7,7 @@ struct Config {
     let submitDelayMs: Int
     let triggerModifier: Modifier
     let submitKey: KeyboardKey
+    let cancelKey: KeyboardKey?
     let appNamePatterns: [String]
     let bundleIdPatterns: [String]
     let dryRun: Bool
@@ -19,6 +20,7 @@ struct Config {
             submitDelayMs: intValue(env["CCVS_SUBMIT_DELAY_MS"], defaultValue: 900),
             triggerModifier: Modifier.parse(env["CCVS_TRIGGER_MODIFIER"]) ?? .command,
             submitKey: KeyboardKey.parse(env["CCVS_SUBMIT_KEY"]) ?? .returnKey,
+            cancelKey: KeyboardKey.parseOptional(env["CCVS_CANCEL_KEY"], defaultValue: .escape),
             appNamePatterns: listValue(env["CCVS_APP_NAMES"], defaultValue: ["Codex", "Code X", "CodeX"]),
             bundleIdPatterns: listValue(env["CCVS_BUNDLE_IDS"], defaultValue: ["com.openai.codex", "com.openai.chatgpt"]),
             dryRun: boolValue(env["CCVS_DRY_RUN"], defaultValue: false),
@@ -80,6 +82,17 @@ struct KeyboardKey {
             return nil
         }
     }
+
+    static func parseOptional(_ raw: String?, defaultValue: KeyboardKey?) -> KeyboardKey? {
+        switch raw?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+        case nil, "":
+            return defaultValue
+        case "none", "off", "disabled", "disable":
+            return nil
+        default:
+            return parse(raw) ?? defaultValue
+        }
+    }
 }
 
 final class CommandVoiceSubmitter {
@@ -87,6 +100,8 @@ final class CommandVoiceSubmitter {
     private var triggerDownAt: DispatchTime?
     private var lastTriggerFlags = false
     private var triggerSoloSince: DispatchTime?
+    private var currentGestureCanceled = false
+    private var pendingSubmissionId = 0
     private var tap: CFMachPort?
 
     init(config: Config) {
@@ -129,7 +144,8 @@ final class CommandVoiceSubmitter {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
         CGEvent.tapEnable(tap: tap, enable: true)
 
-        log("已启动：\(config.triggerModifier.name) 单独保持 >= \(config.minHoldMs)ms，松开后 \(config.submitDelayMs)ms 自动发送 \(config.submitKey.name)。")
+        let cancelDescription = config.cancelKey.map { "，\( $0.name ) 可取消本次发送" } ?? ""
+        log("已启动：\(config.triggerModifier.name) 单独保持 >= \(config.minHoldMs)ms，松开后 \(config.submitDelayMs)ms 自动发送 \(config.submitKey.name)\(cancelDescription)。")
         CFRunLoopRun()
     }
 
@@ -146,6 +162,10 @@ final class CommandVoiceSubmitter {
             handleFlagsChanged(event)
         case .keyDown:
             let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+            if shouldCancel(keyCode: keyCode) {
+                cancelCurrentOrPendingSubmission()
+                return Unmanaged.passUnretained(event)
+            }
             if triggerDownAt != nil && !isModifierKey(keyCode) {
                 triggerSoloSince = nil
                 log("\(config.triggerModifier.name) 期间检测到普通按键按下：\(keyCode)")
@@ -175,6 +195,7 @@ final class CommandVoiceSubmitter {
         if triggerIsDown && !lastTriggerFlags {
             triggerDownAt = DispatchTime.now()
             triggerSoloSince = triggerDownAt
+            currentGestureCanceled = false
             log("\(config.triggerModifier.name) down")
         }
 
@@ -186,10 +207,11 @@ final class CommandVoiceSubmitter {
         if !triggerIsDown && lastTriggerFlags {
             let heldMs = heldDurationMs()
             let soloMs = triggerSoloDurationMs()
-            let shouldSubmit = soloMs >= config.minHoldMs
+            let shouldSubmit = soloMs >= config.minHoldMs && !currentGestureCanceled
             log("\(config.triggerModifier.name) up，总持续 \(heldMs)ms，单独保持 \(soloMs)ms，shouldSubmit=\(shouldSubmit)")
             triggerDownAt = nil
             triggerSoloSince = nil
+            currentGestureCanceled = false
 
             if shouldSubmit {
                 submitIfCodexIsFrontmost()
@@ -221,13 +243,40 @@ final class CommandVoiceSubmitter {
             return
         }
 
+        pendingSubmissionId += 1
+        let submissionId = pendingSubmissionId
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(config.submitDelayMs)) {
+            guard submissionId == self.pendingSubmissionId else {
+                self.log("本次发送已取消。")
+                return
+            }
             if self.frontmostAppMatches() {
                 self.sendReturn()
             } else {
                 self.log("延迟期间前台应用变化，跳过发送。")
             }
+            if submissionId == self.pendingSubmissionId {
+                self.pendingSubmissionId = 0
+            }
         }
+    }
+
+    private func shouldCancel(keyCode: Int64) -> Bool {
+        guard let cancelKey = config.cancelKey else {
+            return false
+        }
+        return keyCode == Int64(cancelKey.keyCode) && (triggerDownAt != nil || pendingSubmissionId != 0)
+    }
+
+    private func cancelCurrentOrPendingSubmission() {
+        if triggerDownAt != nil {
+            currentGestureCanceled = true
+            triggerSoloSince = nil
+        }
+        if pendingSubmissionId != 0 {
+            pendingSubmissionId += 1
+        }
+        log("已取消本次自动发送。")
     }
 
     private func frontmostAppMatches() -> Bool {
@@ -340,6 +389,7 @@ if arguments.contains("--help") || arguments.contains("-h") {
       CCVS_SUBMIT_DELAY_MS   默认 900
       CCVS_TRIGGER_MODIFIER  默认 command，可选 command/control/option/shift
       CCVS_SUBMIT_KEY        默认 return，可选 return/tab/space/escape
+      CCVS_CANCEL_KEY        默认 escape，可选 return/tab/space/escape/none
       CCVS_APP_NAMES         默认 Codex,Code X,CodeX
       CCVS_BUNDLE_IDS        默认 com.openai.codex,com.openai.chatgpt
       CCVS_VERBOSE           默认 0
@@ -358,6 +408,7 @@ if arguments.contains("--check") {
     print("submitDelayMs=\(config.submitDelayMs)")
     print("triggerModifier=\(config.triggerModifier.name)")
     print("submitKey=\(config.submitKey.name)")
+    print("cancelKey=\(config.cancelKey?.name ?? "none")")
     print("appNamePatterns=\(config.appNamePatterns.joined(separator: ","))")
     print("bundleIdPatterns=\(config.bundleIdPatterns.joined(separator: ","))")
     print("dryRun=\(config.dryRun)")

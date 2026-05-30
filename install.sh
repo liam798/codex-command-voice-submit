@@ -44,6 +44,8 @@ cat > "$PLIST_PATH" <<PLIST
     <string>${CCVS_TRIGGER_MODIFIER:-command}</string>
     <key>CCVS_SUBMIT_KEY</key>
     <string>${CCVS_SUBMIT_KEY:-return}</string>
+    <key>CCVS_CANCEL_KEY</key>
+    <string>${CCVS_CANCEL_KEY:-escape}</string>
     <key>CCVS_APP_NAMES</key>
     <string>${CCVS_APP_NAMES:-Codex,Code X,CodeX}</string>
     <key>CCVS_BUNDLE_IDS</key>

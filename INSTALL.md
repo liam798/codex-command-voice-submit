@@ -201,6 +201,11 @@ tail -80 ~/Library/Logs/codex-command-voice-submit.log
 4. 松开 `Command`。
 5. 工具会默认等待 `900ms`，然后自动发送 `Return`。
 
+如果识别过程中说错了，或者松开后想取消本次自动发送，按 `Escape`。取消键在两种时机都有效：
+
+- 仍按住触发键时
+- 松开触发键后的 `900ms` 等待窗口内
+
 默认保护逻辑：
 
 - `Command` 必须按住至少 `650ms`。
@@ -221,6 +226,13 @@ CCVS_MIN_HOLD_MS=800 CCVS_SUBMIT_DELAY_MS=500 make install
 CCVS_TRIGGER_MODIFIER=control CCVS_SUBMIT_KEY=tab make install
 ```
 
+配置取消键，或禁用取消：
+
+```bash
+CCVS_CANCEL_KEY=space make install
+CCVS_CANCEL_KEY=none make install
+```
+
 支持多个 App 平台，名称和 bundle id 都用英文逗号分隔：
 
 ```bash
@@ -237,6 +249,7 @@ make install
 | `CCVS_SUBMIT_DELAY_MS` | `900` | 松开后等待多久再发送 Return |
 | `CCVS_TRIGGER_MODIFIER` | `command` | 触发修饰键，可选 `command` / `control` / `option` / `shift` |
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
+| `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
 | `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | 前台应用名称匹配，逗号分隔 |
 | `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | 前台应用 bundle id 匹配，逗号分隔 |
 | `CCVS_VERBOSE` | `0` | 是否输出调试日志 |
