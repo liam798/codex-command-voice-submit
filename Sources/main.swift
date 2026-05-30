@@ -19,7 +19,7 @@ struct Config {
     static func load() -> Config {
         let env = ProcessInfo.processInfo.environment
         return Config(
-            minHoldMs: intValue(env["CCVS_MIN_HOLD_MS"], defaultValue: 650),
+            minHoldMs: intValue(env["CCVS_MIN_HOLD_MS"], defaultValue: 2000),
             submitDelayMs: intValue(env["CCVS_SUBMIT_DELAY_MS"], defaultValue: 900),
             triggerModifier: Modifier.parse(env["CCVS_TRIGGER_MODIFIER"]) ?? .command,
             triggerSide: TriggerSide.parse(env["CCVS_TRIGGER_SIDE"]) ?? .left,
@@ -130,6 +130,7 @@ final class CommandVoiceSubmitter {
     private var lastTriggerFlags = false
     private var triggerSoloSince: DispatchTime?
     private var currentGestureCanceled = false
+    private var currentGestureId = 0
     private var pendingSubmissionId = 0
     private let hintOverlay: HintOverlay?
     private var tap: CFMachPort?
@@ -225,10 +226,11 @@ final class CommandVoiceSubmitter {
         }
 
         if triggerIsDown && !lastTriggerFlags && triggerKeyChanged {
+            currentGestureId += 1
             triggerDownAt = DispatchTime.now()
             triggerSoloSince = triggerDownAt
             currentGestureCanceled = false
-            showHint()
+            scheduleHint(for: currentGestureId)
             log("\(config.triggerModifier.name) down")
         }
 
@@ -245,6 +247,7 @@ final class CommandVoiceSubmitter {
             triggerDownAt = nil
             triggerSoloSince = nil
             currentGestureCanceled = false
+            currentGestureId += 1
 
             if shouldSubmit {
                 submitIfCodexIsFrontmost()
@@ -322,6 +325,7 @@ final class CommandVoiceSubmitter {
         if triggerDownAt != nil {
             currentGestureCanceled = true
             triggerSoloSince = nil
+            currentGestureId += 1
         }
         if pendingSubmissionId != 0 {
             pendingSubmissionId += 1
@@ -335,6 +339,21 @@ final class CommandVoiceSubmitter {
             return
         }
         DispatchQueue.main.async {
+            self.hintOverlay?.show(text: self.config.hintText)
+        }
+    }
+
+    private func scheduleHint(for gestureId: Int) {
+        guard config.cancelKey != nil else {
+            return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(config.minHoldMs)) {
+            guard gestureId == self.currentGestureId,
+                  self.triggerDownAt != nil,
+                  !self.currentGestureCanceled,
+                  self.triggerSoloDurationMs() >= self.config.minHoldMs else {
+                return
+            }
             self.hintOverlay?.show(text: self.config.hintText)
         }
     }

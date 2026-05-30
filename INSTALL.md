@@ -214,7 +214,7 @@ tail -80 ~/Library/Logs/codex-command-voice-submit.log
 
 默认保护逻辑：
 
-- `Command` 必须按住至少 `650ms`。
+- `Command` 必须按住至少 `2000ms`。
 - 按住期间如果按了其他普通键，不会自动发送。
 - 只有当前台应用名称或 bundle id 匹配 Codex / Code X 时才触发。
 
@@ -266,7 +266,7 @@ make install
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `CCVS_MIN_HOLD_MS` | `650` | Command 按住多久才触发 |
+| `CCVS_MIN_HOLD_MS` | `2000` | Command 按住多久才触发 |
 | `CCVS_SUBMIT_DELAY_MS` | `900` | 松开后等待多久再发送 Return |
 | `CCVS_TRIGGER_MODIFIER` | `command` | 触发修饰键，可选 `command` / `control` / `option` / `shift` |
 | `CCVS_TRIGGER_SIDE` | `left` | 触发键侧，可选 `left` / `right` / `any` |

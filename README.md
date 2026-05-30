@@ -13,7 +13,7 @@
 ## 行为
 
 - 默认只监听左侧 `Command` 的按下与松开，也可配置为右侧或两侧，以及 `Control` / `Option` / `Shift`。
-- 默认要求按住至少 `650ms`。
+- 默认要求按住至少 `2000ms`。
 - 如果按住 `Command` 期间又按了其他普通键，会判定为正常快捷键，不会自动发送。
 - 只在前台应用名称或 bundle id 匹配 Codex / Code X 时触发。
 - 松开后默认等待 `900ms` 再发送 `Return`，给语音输入一点落字时间。
@@ -114,7 +114,7 @@ make install
 
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
-| `CCVS_MIN_HOLD_MS` | `650` | Command 按住多久才触发 |
+| `CCVS_MIN_HOLD_MS` | `2000` | Command 按住多久才触发 |
 | `CCVS_SUBMIT_DELAY_MS` | `900` | 松开后等待多久再发送 Return |
 | `CCVS_TRIGGER_MODIFIER` | `command` | 触发修饰键，可选 `command` / `control` / `option` / `shift` |
 | `CCVS_TRIGGER_SIDE` | `left` | 触发键侧，可选 `left` / `right` / `any` |

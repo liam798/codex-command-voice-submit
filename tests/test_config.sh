@@ -24,6 +24,7 @@ grep -q '^showHint=false$' <<<"$output"
 grep -q '^hintText=按 Space 取消自动发送$' <<<"$output"
 
 default_output="$("$BIN" --check)"
+grep -q '^minHoldMs=2000$' <<<"$default_output"
 grep -q '^triggerModifier=command$' <<<"$default_output"
 grep -q '^triggerSide=left$' <<<"$default_output"
 grep -q '^submitKey=return$' <<<"$default_output"
