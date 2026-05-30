@@ -11,6 +11,7 @@ struct Config {
     let cancelKey: KeyboardKey?
     let showHint: Bool
     let hintText: String
+    let hintDurationMs: Int
     let appNamePatterns: [String]
     let bundleIdPatterns: [String]
     let dryRun: Bool
@@ -27,6 +28,7 @@ struct Config {
             cancelKey: KeyboardKey.parseOptional(env["CCVS_CANCEL_KEY"], defaultValue: .escape),
             showHint: boolValue(env["CCVS_SHOW_HINT"], defaultValue: true),
             hintText: stringValue(env["CCVS_HINT_TEXT"], defaultValue: defaultHintText(cancelKey: KeyboardKey.parseOptional(env["CCVS_CANCEL_KEY"], defaultValue: .escape))),
+            hintDurationMs: intValue(env["CCVS_HINT_DURATION_MS"], defaultValue: 1200),
             appNamePatterns: listValue(env["CCVS_APP_NAMES"], defaultValue: ["Codex", "Code X", "CodeX"]),
             bundleIdPatterns: listValue(env["CCVS_BUNDLE_IDS"], defaultValue: ["com.openai.codex", "com.openai.chatgpt"]),
             dryRun: boolValue(env["CCVS_DRY_RUN"], defaultValue: false),
@@ -293,7 +295,6 @@ final class CommandVoiceSubmitter {
             return
         }
 
-        showHint()
         pendingSubmissionId += 1
         let submissionId = pendingSubmissionId
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(config.submitDelayMs)) {
@@ -334,12 +335,12 @@ final class CommandVoiceSubmitter {
         log("已取消本次自动发送。")
     }
 
-    private func showHint() {
+    private func showHintToast() {
         guard config.cancelKey != nil else {
             return
         }
         DispatchQueue.main.async {
-            self.hintOverlay?.show(text: self.config.hintText)
+            self.hintOverlay?.show(text: self.config.hintText, durationMs: self.config.hintDurationMs)
         }
     }
 
@@ -354,7 +355,7 @@ final class CommandVoiceSubmitter {
                   self.triggerSoloDurationMs() >= self.config.minHoldMs else {
                 return
             }
-            self.hintOverlay?.show(text: self.config.hintText)
+            self.showHintToast()
         }
     }
 
@@ -412,17 +413,14 @@ final class CommandVoiceSubmitter {
 
 final class HintOverlay {
     private let window: NSPanel
-    private let label: NSTextField
+    private let toastView: ToastView
+    private var toastGeneration = 0
 
     init() {
-        label = NSTextField(labelWithString: "")
-        label.font = NSFont.systemFont(ofSize: 13, weight: .medium)
-        label.textColor = .white
-        label.alignment = .center
-        label.lineBreakMode = .byTruncatingTail
+        toastView = ToastView()
 
         window = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 230, height: 34),
+            contentRect: NSRect(x: 0, y: 0, width: 1, height: 1),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: true
@@ -430,19 +428,30 @@ final class HintOverlay {
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .transient, .ignoresCycle]
         window.isOpaque = false
-        window.backgroundColor = NSColor.black.withAlphaComponent(0.56)
+        window.backgroundColor = .clear
         window.hasShadow = true
         window.ignoresMouseEvents = true
-        window.contentView = label
+        window.contentView = toastView
     }
 
-    func show(text: String) {
-        label.stringValue = text
+    func show(text: String, durationMs: Int) {
+        toastGeneration += 1
+        let generation = toastGeneration
+        toastView.text = text
+        window.setFrame(NSRect(origin: window.frame.origin, size: toastView.preferredSize), display: true)
         positionNearBottom()
         window.orderFrontRegardless()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(durationMs)) {
+            guard generation == self.toastGeneration else {
+                return
+            }
+            self.hide()
+        }
     }
 
     func hide() {
+        toastGeneration += 1
         window.orderOut(nil)
     }
 
@@ -457,6 +466,62 @@ final class HintOverlay {
             y: frame.minY + 82
         )
         window.setFrameOrigin(origin)
+    }
+}
+
+final class ToastView: NSView {
+    var text = "" {
+        didSet {
+            needsDisplay = true
+        }
+    }
+
+    private let font = NSFont.systemFont(ofSize: 13, weight: .semibold)
+    private let horizontalPadding: CGFloat = 18
+    private let verticalPadding: CGFloat = 8
+    private let minWidth: CGFloat = 112
+    private let maxWidth: CGFloat = 260
+
+    var preferredSize: NSSize {
+        let textWidth = ceil((text as NSString).size(withAttributes: attributes).width)
+        return NSSize(
+            width: min(max(textWidth + horizontalPadding * 2, minWidth), maxWidth),
+            height: ceil(font.ascender - font.descender + verticalPadding * 2)
+        )
+    }
+
+    override var isOpaque: Bool {
+        false
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+
+        let background = NSBezierPath(roundedRect: bounds, xRadius: 8, yRadius: 8)
+        NSColor.black.withAlphaComponent(0.68).setFill()
+        background.fill()
+
+        let attributedText = NSAttributedString(string: text, attributes: attributes)
+        let textSize = attributedText.size()
+        let textRect = NSRect(
+            x: 0,
+            y: floor((bounds.height - textSize.height) / 2),
+            width: bounds.width,
+            height: ceil(textSize.height)
+        )
+        attributedText.draw(in: textRect)
+    }
+
+    private var attributes: [NSAttributedString.Key: Any] {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = .center
+        paragraphStyle.lineBreakMode = .byTruncatingTail
+
+        return [
+            .font: font,
+            .foregroundColor: NSColor.white,
+            .paragraphStyle: paragraphStyle
+        ]
     }
 }
 
@@ -558,6 +623,7 @@ if arguments.contains("--help") || arguments.contains("-h") {
       CCVS_CANCEL_KEY        默认 escape，可选 return/tab/space/escape/none
       CCVS_SHOW_HINT         默认 1
       CCVS_HINT_TEXT         默认按取消键生成提示文案
+      CCVS_HINT_DURATION_MS  默认 1200
       CCVS_APP_NAMES         默认 Codex,Code X,CodeX
       CCVS_BUNDLE_IDS        默认 com.openai.codex,com.openai.chatgpt
       CCVS_VERBOSE           默认 0
@@ -580,6 +646,7 @@ if arguments.contains("--check") {
     print("cancelKey=\(config.cancelKey?.name ?? "none")")
     print("showHint=\(config.showHint)")
     print("hintText=\(config.hintText)")
+    print("hintDurationMs=\(config.hintDurationMs)")
     print("appNamePatterns=\(config.appNamePatterns.joined(separator: ","))")
     print("bundleIdPatterns=\(config.bundleIdPatterns.joined(separator: ","))")
     print("dryRun=\(config.dryRun)")

@@ -13,6 +13,7 @@ output="$(
   CCVS_CANCEL_KEY=space \
   CCVS_SHOW_HINT=0 \
   CCVS_HINT_TEXT="按 Space 取消自动发送" \
+  CCVS_HINT_DURATION_MS=800 \
   "$BIN" --check
 )"
 
@@ -22,6 +23,7 @@ grep -q '^submitKey=tab$' <<<"$output"
 grep -q '^cancelKey=space$' <<<"$output"
 grep -q '^showHint=false$' <<<"$output"
 grep -q '^hintText=按 Space 取消自动发送$' <<<"$output"
+grep -q '^hintDurationMs=800$' <<<"$output"
 
 default_output="$("$BIN" --check)"
 grep -q '^minHoldMs=2000$' <<<"$default_output"
@@ -31,6 +33,7 @@ grep -q '^submitKey=return$' <<<"$default_output"
 grep -q '^cancelKey=escape$' <<<"$default_output"
 grep -q '^showHint=true$' <<<"$default_output"
 grep -q '^hintText=Esc 取消发送$' <<<"$default_output"
+grep -q '^hintDurationMs=1200$' <<<"$default_output"
 
 none_output="$(CCVS_CANCEL_KEY=none "$BIN" --check)"
 grep -q '^cancelKey=none$' <<<"$none_output"

@@ -57,6 +57,8 @@ cat > "$PLIST_PATH" <<PLIST
     <string>${CCVS_SHOW_HINT:-1}</string>
     <key>CCVS_HINT_TEXT</key>
     <string>${CCVS_HINT_TEXT:-}</string>
+    <key>CCVS_HINT_DURATION_MS</key>
+    <string>${CCVS_HINT_DURATION_MS:-1200}</string>
     <key>CCVS_APP_NAMES</key>
     <string>${CCVS_APP_NAMES:-Codex,Code X,CodeX}</string>
     <key>CCVS_BUNDLE_IDS</key>
