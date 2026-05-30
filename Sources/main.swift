@@ -8,6 +8,8 @@ struct Config {
     let triggerModifier: Modifier
     let submitKey: KeyboardKey
     let cancelKey: KeyboardKey?
+    let showHint: Bool
+    let hintText: String
     let appNamePatterns: [String]
     let bundleIdPatterns: [String]
     let dryRun: Bool
@@ -21,6 +23,8 @@ struct Config {
             triggerModifier: Modifier.parse(env["CCVS_TRIGGER_MODIFIER"]) ?? .command,
             submitKey: KeyboardKey.parse(env["CCVS_SUBMIT_KEY"]) ?? .returnKey,
             cancelKey: KeyboardKey.parseOptional(env["CCVS_CANCEL_KEY"], defaultValue: .escape),
+            showHint: boolValue(env["CCVS_SHOW_HINT"], defaultValue: true),
+            hintText: stringValue(env["CCVS_HINT_TEXT"], defaultValue: defaultHintText(cancelKey: KeyboardKey.parseOptional(env["CCVS_CANCEL_KEY"], defaultValue: .escape))),
             appNamePatterns: listValue(env["CCVS_APP_NAMES"], defaultValue: ["Codex", "Code X", "CodeX"]),
             bundleIdPatterns: listValue(env["CCVS_BUNDLE_IDS"], defaultValue: ["com.openai.codex", "com.openai.chatgpt"]),
             dryRun: boolValue(env["CCVS_DRY_RUN"], defaultValue: false),
@@ -102,10 +106,12 @@ final class CommandVoiceSubmitter {
     private var triggerSoloSince: DispatchTime?
     private var currentGestureCanceled = false
     private var pendingSubmissionId = 0
+    private let hintOverlay: HintOverlay?
     private var tap: CFMachPort?
 
     init(config: Config) {
         self.config = config
+        self.hintOverlay = config.showHint ? HintOverlay() : nil
     }
 
     func run() {
@@ -196,6 +202,7 @@ final class CommandVoiceSubmitter {
             triggerDownAt = DispatchTime.now()
             triggerSoloSince = triggerDownAt
             currentGestureCanceled = false
+            showHint()
             log("\(config.triggerModifier.name) down")
         }
 
@@ -215,6 +222,8 @@ final class CommandVoiceSubmitter {
 
             if shouldSubmit {
                 submitIfCodexIsFrontmost()
+            } else {
+                hideHint()
             }
         }
 
@@ -240,14 +249,17 @@ final class CommandVoiceSubmitter {
     private func submitIfCodexIsFrontmost() {
         guard frontmostAppMatches() else {
             log("前台应用不匹配，跳过发送。")
+            hideHint()
             return
         }
 
+        showHint()
         pendingSubmissionId += 1
         let submissionId = pendingSubmissionId
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(config.submitDelayMs)) {
             guard submissionId == self.pendingSubmissionId else {
                 self.log("本次发送已取消。")
+                self.hideHint()
                 return
             }
             if self.frontmostAppMatches() {
@@ -258,6 +270,7 @@ final class CommandVoiceSubmitter {
             if submissionId == self.pendingSubmissionId {
                 self.pendingSubmissionId = 0
             }
+            self.hideHint()
         }
     }
 
@@ -276,7 +289,23 @@ final class CommandVoiceSubmitter {
         if pendingSubmissionId != 0 {
             pendingSubmissionId += 1
         }
+        hideHint()
         log("已取消本次自动发送。")
+    }
+
+    private func showHint() {
+        guard config.cancelKey != nil else {
+            return
+        }
+        DispatchQueue.main.async {
+            self.hintOverlay?.show(text: self.config.hintText)
+        }
+    }
+
+    private func hideHint() {
+        DispatchQueue.main.async {
+            self.hintOverlay?.hide()
+        }
     }
 
     private func frontmostAppMatches() -> Bool {
@@ -322,6 +351,56 @@ final class CommandVoiceSubmitter {
         if config.verbose {
             print("[codex-command-voice-submit] \(message)")
         }
+    }
+}
+
+final class HintOverlay {
+    private let window: NSPanel
+    private let label: NSTextField
+
+    init() {
+        label = NSTextField(labelWithString: "")
+        label.font = NSFont.systemFont(ofSize: 15, weight: .medium)
+        label.textColor = .white
+        label.alignment = .center
+        label.lineBreakMode = .byTruncatingTail
+
+        window = NSPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 54),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: true
+        )
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .transient, .ignoresCycle]
+        window.isOpaque = false
+        window.backgroundColor = NSColor.black.withAlphaComponent(0.72)
+        window.hasShadow = true
+        window.ignoresMouseEvents = true
+        window.contentView = label
+    }
+
+    func show(text: String) {
+        label.stringValue = text
+        positionNearBottom()
+        window.orderFrontRegardless()
+    }
+
+    func hide() {
+        window.orderOut(nil)
+    }
+
+    private func positionNearBottom() {
+        guard let screen = NSScreen.main else {
+            return
+        }
+        let frame = screen.visibleFrame
+        let size = window.frame.size
+        let origin = NSPoint(
+            x: frame.midX - size.width / 2,
+            y: frame.minY + 120
+        )
+        window.setFrameOrigin(origin)
     }
 }
 
@@ -373,6 +452,36 @@ private func listValue(_ raw: String?, defaultValue: [String]) -> [String] {
     return values.isEmpty ? defaultValue : values
 }
 
+private func stringValue(_ raw: String?, defaultValue: String) -> String {
+    guard let raw else {
+        return defaultValue
+    }
+    let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? defaultValue : trimmed
+}
+
+private func defaultHintText(cancelKey: KeyboardKey?) -> String {
+    guard let cancelKey else {
+        return ""
+    }
+    return "按 \(displayName(for: cancelKey)) 取消自动发送"
+}
+
+private func displayName(for key: KeyboardKey) -> String {
+    switch key.name {
+    case "escape":
+        return "Escape"
+    case "return":
+        return "Return"
+    case "tab":
+        return "Tab"
+    case "space":
+        return "Space"
+    default:
+        return key.name
+    }
+}
+
 let arguments = CommandLine.arguments.dropFirst()
 let config = Config.load()
 
@@ -390,6 +499,8 @@ if arguments.contains("--help") || arguments.contains("-h") {
       CCVS_TRIGGER_MODIFIER  默认 command，可选 command/control/option/shift
       CCVS_SUBMIT_KEY        默认 return，可选 return/tab/space/escape
       CCVS_CANCEL_KEY        默认 escape，可选 return/tab/space/escape/none
+      CCVS_SHOW_HINT         默认 1
+      CCVS_HINT_TEXT         默认按取消键生成提示文案
       CCVS_APP_NAMES         默认 Codex,Code X,CodeX
       CCVS_BUNDLE_IDS        默认 com.openai.codex,com.openai.chatgpt
       CCVS_VERBOSE           默认 0
@@ -409,6 +520,8 @@ if arguments.contains("--check") {
     print("triggerModifier=\(config.triggerModifier.name)")
     print("submitKey=\(config.submitKey.name)")
     print("cancelKey=\(config.cancelKey?.name ?? "none")")
+    print("showHint=\(config.showHint)")
+    print("hintText=\(config.hintText)")
     print("appNamePatterns=\(config.appNamePatterns.joined(separator: ","))")
     print("bundleIdPatterns=\(config.bundleIdPatterns.joined(separator: ","))")
     print("dryRun=\(config.dryRun)")

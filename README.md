@@ -18,6 +18,7 @@
 - 只在前台应用名称或 bundle id 匹配 Codex / Code X 时触发。
 - 松开后默认等待 `900ms` 再发送 `Return`，给语音输入一点落字时间。
 - 默认按 `Escape` 可取消本次自动发送：按住触发键期间或松开后的等待窗口内都有效。
+- 默认显示轻量浮层提示：`按 Escape 取消自动发送`。
 
 ## 构建
 
@@ -87,6 +88,13 @@ CCVS_CANCEL_KEY=space make install
 CCVS_CANCEL_KEY=none make install
 ```
 
+配置或关闭提示浮层：
+
+```bash
+CCVS_HINT_TEXT='按 Escape 取消自动发送' make install
+CCVS_SHOW_HINT=0 make install
+```
+
 支持多个 App 名称和 bundle id，使用英文逗号分隔：
 
 ```bash
@@ -104,6 +112,8 @@ make install
 | `CCVS_TRIGGER_MODIFIER` | `command` | 触发修饰键，可选 `command` / `control` / `option` / `shift` |
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
 | `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
+| `CCVS_SHOW_HINT` | `1` | 是否显示取消提示浮层 |
+| `CCVS_HINT_TEXT` | `按 Escape 取消自动发送` | 自定义提示文案 |
 | `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | 前台应用名称匹配，逗号分隔 |
 | `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | 前台应用 bundle id 匹配，逗号分隔 |
 | `CCVS_VERBOSE` | `0` | 是否输出调试日志 |
