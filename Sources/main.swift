@@ -520,13 +520,13 @@ private func defaultHintText(cancelKey: KeyboardKey?) -> String {
     guard let cancelKey else {
         return ""
     }
-    return "按 \(displayName(for: cancelKey)) 取消自动发送"
+    return "\(displayName(for: cancelKey)) 取消发送"
 }
 
 private func displayName(for key: KeyboardKey) -> String {
     switch key.name {
     case "escape":
-        return "Escape"
+        return "Esc"
     case "return":
         return "Return"
     case "tab":
@@ -550,7 +550,7 @@ if arguments.contains("--help") || arguments.contains("-h") {
                                            触发一次 macOS 辅助功能授权提示
 
     环境变量:
-      CCVS_MIN_HOLD_MS       默认 650
+      CCVS_MIN_HOLD_MS       默认 2000
       CCVS_SUBMIT_DELAY_MS   默认 900
       CCVS_TRIGGER_MODIFIER  默认 command，可选 command/control/option/shift
       CCVS_TRIGGER_SIDE      默认 left，可选 left/right/any

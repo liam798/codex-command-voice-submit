@@ -197,7 +197,7 @@ tail -80 ~/Library/Logs/codex-voice-auto-send.log
 
 1. 打开 Codex / Code X。
 2. 聚焦输入框。
-3. 长按左侧 `Command` 进行语音输入。
+3. 长按配置的触发键进行语音输入。默认是左侧 `Command`；如果安装时设置了 `CCVS_TRIGGER_SIDE=right`，则使用右侧 `Command`。
 4. 松开 `Command`。
 5. 工具会默认等待 `900ms`，然后自动发送 `Return`。
 
@@ -209,7 +209,7 @@ tail -80 ~/Library/Logs/codex-voice-auto-send.log
 默认会显示一个轻量浮层提示：
 
 ```text
-按 Escape 取消自动发送
+Esc 取消发送
 ```
 
 默认保护逻辑：
@@ -250,7 +250,7 @@ CCVS_CANCEL_KEY=none make install
 配置或关闭提示浮层：
 
 ```bash
-CCVS_HINT_TEXT='按 Escape 取消自动发送' make install
+CCVS_HINT_TEXT='Esc 取消发送' make install
 CCVS_SHOW_HINT=0 make install
 ```
 
@@ -273,7 +273,7 @@ make install
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
 | `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
 | `CCVS_SHOW_HINT` | `1` | 是否显示取消提示浮层 |
-| `CCVS_HINT_TEXT` | `按 Escape 取消自动发送` | 自定义提示文案 |
+| `CCVS_HINT_TEXT` | `Esc 取消发送` | 自定义提示文案 |
 | `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | 前台应用名称匹配，逗号分隔 |
 | `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | 前台应用 bundle id 匹配，逗号分隔 |
 | `CCVS_VERBOSE` | `0` | 是否输出调试日志 |

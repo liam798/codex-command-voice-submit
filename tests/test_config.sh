@@ -30,7 +30,7 @@ grep -q '^triggerSide=left$' <<<"$default_output"
 grep -q '^submitKey=return$' <<<"$default_output"
 grep -q '^cancelKey=escape$' <<<"$default_output"
 grep -q '^showHint=true$' <<<"$default_output"
-grep -q '^hintText=按 Escape 取消自动发送$' <<<"$default_output"
+grep -q '^hintText=Esc 取消发送$' <<<"$default_output"
 
 none_output="$(CCVS_CANCEL_KEY=none "$BIN" --check)"
 grep -q '^cancelKey=none$' <<<"$none_output"

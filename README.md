@@ -1,6 +1,6 @@
 # Codex Voice Auto Send
 
-一个 macOS 本机辅助进程：当前台应用是 Codex / Code X 时，长按 `Command` 后松开，会在短暂延迟后自动发送 `Return`，用于把语音输入完成后的文本发出去。
+一个 macOS 本机辅助进程：当前台应用是 Codex / Code X 时，长按指定修饰键后松开，会在短暂延迟后自动发送 `Return`，用于把语音输入完成后的文本发出去。
 
 另一台 Mac 的完整安装步骤见 [INSTALL.md](INSTALL.md)。
 
@@ -10,15 +10,17 @@
 ./package.sh
 ```
 
+推送 `v*` tag 后，GitHub Actions 会自动构建压缩包并发布 Release。
+
 ## 行为
 
-- 默认只监听左侧 `Command` 的按下与松开，也可配置为右侧或两侧，以及 `Control` / `Option` / `Shift`。
+- 默认只监听左侧 `Command` 的按下与松开；可配置为右侧或两侧，也可改用 `Control` / `Option` / `Shift`。
 - 默认要求按住至少 `2000ms`。
 - 如果按住 `Command` 期间又按了其他普通键，会判定为正常快捷键，不会自动发送。
 - 只在前台应用名称或 bundle id 匹配 Codex / Code X 时触发。
 - 松开后默认等待 `900ms` 再发送 `Return`，给语音输入一点落字时间。
 - 默认按 `Escape` 可取消本次自动发送：按住触发键期间或松开后的等待窗口内都有效。
-- 默认显示轻量浮层提示：`按 Escape 取消自动发送`。
+- 默认显示轻量浮层提示：`Esc 取消发送`。
 
 ## 构建
 
@@ -98,7 +100,7 @@ CCVS_CANCEL_KEY=none make install
 配置或关闭提示浮层：
 
 ```bash
-CCVS_HINT_TEXT='按 Escape 取消自动发送' make install
+CCVS_HINT_TEXT='Esc 取消发送' make install
 CCVS_SHOW_HINT=0 make install
 ```
 
@@ -121,7 +123,7 @@ make install
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
 | `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
 | `CCVS_SHOW_HINT` | `1` | 是否显示取消提示浮层 |
-| `CCVS_HINT_TEXT` | `按 Escape 取消自动发送` | 自定义提示文案 |
+| `CCVS_HINT_TEXT` | `Esc 取消发送` | 自定义提示文案 |
 | `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | 前台应用名称匹配，逗号分隔 |
 | `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | 前台应用 bundle id 匹配，逗号分隔 |
 | `CCVS_VERBOSE` | `0` | 是否输出调试日志 |
