@@ -142,7 +142,7 @@ final class CommandVoiceSubmitter {
 
     func run() {
         guard checkAccessibilityPermission(prompt: false) else {
-            fputs("需要授予辅助功能权限：系统设置 -> 隐私与安全性 -> 辅助功能，允许此程序。可手动运行 `codex-command-voice-submit --request-permission` 触发一次授权提示。\n", stderr)
+            fputs("需要授予辅助功能权限：系统设置 -> 隐私与安全性 -> 辅助功能，允许此程序。可手动运行 `codex-voice-auto-send --request-permission` 触发一次授权提示。\n", stderr)
             exit(2)
         }
 
@@ -405,7 +405,7 @@ final class CommandVoiceSubmitter {
 
     private func log(_ message: String) {
         if config.verbose {
-            print("[codex-command-voice-submit] \(message)")
+            print("[codex-voice-auto-send] \(message)")
         }
     }
 }
@@ -544,9 +544,9 @@ let config = Config.load()
 if arguments.contains("--help") || arguments.contains("-h") {
     print("""
     用法:
-      codex-command-voice-submit          启动监听
-      codex-command-voice-submit --check  检查配置和权限，不启动监听
-      codex-command-voice-submit --request-permission
+      codex-voice-auto-send          启动监听
+      codex-voice-auto-send --check  检查配置和权限，不启动监听
+      codex-voice-auto-send --request-permission
                                            触发一次 macOS 辅助功能授权提示
 
     环境变量:

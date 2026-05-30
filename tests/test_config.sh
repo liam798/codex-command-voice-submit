@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-BIN="$ROOT_DIR/.build/codex-command-voice-submit"
+BIN="$ROOT_DIR/.build/codex-voice-auto-send"
 
 make -C "$ROOT_DIR" build >/dev/null
 

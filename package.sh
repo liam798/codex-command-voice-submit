@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-NAME="codex-command-voice-submit"
+NAME="codex-voice-auto-send"
 VERSION="${1:-$(date +%Y%m%d-%H%M%S)}"
 DIST_DIR="$ROOT_DIR/dist"
 STAGE_DIR="$DIST_DIR/$NAME-$VERSION"

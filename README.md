@@ -1,4 +1,4 @@
-# Codex Command Voice Submit
+# Codex Voice Auto Send
 
 一个 macOS 本机辅助进程：当前台应用是 Codex / Code X 时，长按 `Command` 后松开，会在短暂延迟后自动发送 `Return`，用于把语音输入完成后的文本发出去。
 
@@ -23,7 +23,7 @@
 ## 构建
 
 ```bash
-cd /Volumes/Disk_APFS/Work/AI/AiDemos/codex-command-voice-submit
+cd /Volumes/Disk_APFS/Work/AI/AiDemos/codex-voice-auto-send
 make build
 ```
 
@@ -32,13 +32,13 @@ make build
 先检查配置和权限：
 
 ```bash
-.build/codex-command-voice-submit --check
+.build/codex-voice-auto-send --check
 ```
 
 如果需要触发一次 macOS 授权提示：
 
 ```bash
-.build/codex-command-voice-submit --request-permission
+.build/codex-voice-auto-send --request-permission
 ```
 
 再启动前台监听：
@@ -63,8 +63,8 @@ make install
 日志位置：
 
 ```text
-~/Library/Logs/codex-command-voice-submit.log
-~/Library/Logs/codex-command-voice-submit.err.log
+~/Library/Logs/codex-voice-auto-send.log
+~/Library/Logs/codex-voice-auto-send.err.log
 ```
 
 ## 配置

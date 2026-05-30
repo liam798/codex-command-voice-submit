@@ -2,11 +2,13 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
-BIN_SRC="$ROOT_DIR/.build/codex-command-voice-submit"
+BIN_SRC="$ROOT_DIR/.build/codex-voice-auto-send"
 INSTALL_DIR="$HOME/.local/bin"
-BIN_DST="$INSTALL_DIR/codex-command-voice-submit"
+BIN_DST="$INSTALL_DIR/codex-voice-auto-send"
 PLIST_DIR="$HOME/Library/LaunchAgents"
-PLIST_PATH="$PLIST_DIR/com.local.codex-command-voice-submit.plist"
+PLIST_PATH="$PLIST_DIR/com.local.codex-voice-auto-send.plist"
+OLD_PLIST_PATH="$PLIST_DIR/com.local.codex-command-voice-submit.plist"
+OLD_BIN_DST="$INSTALL_DIR/codex-command-voice-submit"
 
 if [[ ! -x "$BIN_SRC" ]]; then
   echo "请先运行：make build"
@@ -14,6 +16,9 @@ if [[ ! -x "$BIN_SRC" ]]; then
 fi
 
 mkdir -p "$INSTALL_DIR" "$PLIST_DIR"
+launchctl unload "$OLD_PLIST_PATH" >/dev/null 2>&1 || true
+rm -f "$OLD_PLIST_PATH" "$OLD_BIN_DST"
+
 cp "$BIN_SRC" "$BIN_DST"
 chmod +x "$BIN_DST"
 
@@ -23,7 +28,7 @@ cat > "$PLIST_PATH" <<PLIST
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.local.codex-command-voice-submit</string>
+  <string>com.local.codex-voice-auto-send</string>
   <key>ProgramArguments</key>
   <array>
     <string>$BIN_DST</string>
@@ -31,9 +36,9 @@ cat > "$PLIST_PATH" <<PLIST
   <key>RunAtLoad</key>
   <true/>
   <key>StandardOutPath</key>
-  <string>$HOME/Library/Logs/codex-command-voice-submit.log</string>
+  <string>$HOME/Library/Logs/codex-voice-auto-send.log</string>
   <key>StandardErrorPath</key>
-  <string>$HOME/Library/Logs/codex-command-voice-submit.err.log</string>
+  <string>$HOME/Library/Logs/codex-voice-auto-send.err.log</string>
   <key>EnvironmentVariables</key>
   <dict>
     <key>CCVS_MIN_HOLD_MS</key>

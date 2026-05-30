@@ -1,6 +1,6 @@
 SWIFTC ?= swiftc
 BUILD_DIR := .build
-BIN := $(BUILD_DIR)/codex-command-voice-submit
+BIN := $(BUILD_DIR)/codex-voice-auto-send
 SRC := Sources/main.swift
 
 .PHONY: build run clean install uninstall package
