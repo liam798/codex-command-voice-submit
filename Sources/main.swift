@@ -21,7 +21,7 @@ struct Config {
         let env = ProcessInfo.processInfo.environment
         return Config(
             minHoldMs: intValue(env["CCVS_MIN_HOLD_MS"], defaultValue: 2000),
-            submitDelayMs: intValue(env["CCVS_SUBMIT_DELAY_MS"], defaultValue: 900),
+            submitDelayMs: intValue(env["CCVS_SUBMIT_DELAY_MS"], defaultValue: 2000),
             triggerModifier: Modifier.parse(env["CCVS_TRIGGER_MODIFIER"]) ?? .command,
             triggerSide: TriggerSide.parse(env["CCVS_TRIGGER_SIDE"]) ?? .left,
             submitKey: KeyboardKey.parse(env["CCVS_SUBMIT_KEY"]) ?? .returnKey,
@@ -232,7 +232,6 @@ final class CommandVoiceSubmitter {
             triggerDownAt = DispatchTime.now()
             triggerSoloSince = triggerDownAt
             currentGestureCanceled = false
-            scheduleHint(for: currentGestureId)
             log("\(config.triggerModifier.name) down")
         }
 
@@ -297,6 +296,7 @@ final class CommandVoiceSubmitter {
 
         pendingSubmissionId += 1
         let submissionId = pendingSubmissionId
+        showHintToast()
         DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(config.submitDelayMs)) {
             guard submissionId == self.pendingSubmissionId else {
                 self.log("本次发送已取消。")
@@ -341,21 +341,6 @@ final class CommandVoiceSubmitter {
         }
         DispatchQueue.main.async {
             self.hintOverlay?.show(text: self.config.hintText, durationMs: self.config.hintDurationMs)
-        }
-    }
-
-    private func scheduleHint(for gestureId: Int) {
-        guard config.cancelKey != nil else {
-            return
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(config.minHoldMs)) {
-            guard gestureId == self.currentGestureId,
-                  self.triggerDownAt != nil,
-                  !self.currentGestureCanceled,
-                  self.triggerSoloDurationMs() >= self.config.minHoldMs else {
-                return
-            }
-            self.showHintToast()
         }
     }
 
@@ -616,7 +601,7 @@ if arguments.contains("--help") || arguments.contains("-h") {
 
     环境变量:
       CCVS_MIN_HOLD_MS       默认 2000
-      CCVS_SUBMIT_DELAY_MS   默认 900
+      CCVS_SUBMIT_DELAY_MS   默认 2000
       CCVS_TRIGGER_MODIFIER  默认 command，可选 command/control/option/shift
       CCVS_TRIGGER_SIDE      默认 left，可选 left/right/any
       CCVS_SUBMIT_KEY        默认 return，可选 return/tab/space/escape

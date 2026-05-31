@@ -27,6 +27,7 @@ grep -q '^hintDurationMs=800$' <<<"$output"
 
 default_output="$("$BIN" --check)"
 grep -q '^minHoldMs=2000$' <<<"$default_output"
+grep -q '^submitDelayMs=2000$' <<<"$default_output"
 grep -q '^triggerModifier=command$' <<<"$default_output"
 grep -q '^triggerSide=left$' <<<"$default_output"
 grep -q '^submitKey=return$' <<<"$default_output"

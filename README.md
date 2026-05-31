@@ -20,9 +20,9 @@ English: A small macOS helper for Codex / Code X. Hold a configurable modifier k
 - 默认要求按住至少 `2000ms`。
 - 如果按住 `Command` 期间又按了其他普通键，会判定为正常快捷键，不会自动发送。
 - 只在前台应用名称或 bundle id 匹配 Codex / Code X 时触发。
-- 松开后默认等待 `900ms` 再发送 `Return`，给语音输入一点落字时间。
+- 松开后默认显示短 Toast，并等待 `2000ms` 再发送 `Return`。
 - 默认按 `Escape` 可取消本次自动发送：按住触发键期间或松开后的等待窗口内都有效。
-- 达到触发时长后默认显示短 Toast：`Esc 取消自动发送`，Toast 会自动消失，不会在发送等待期间常驻遮挡输入框。
+- 长按期间不显示提示；松开并确认满足触发条件后才显示短 Toast：`Esc 取消自动发送`，Toast 会自动消失。
 
 ## 构建
 
@@ -120,7 +120,7 @@ make install
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
 | `CCVS_MIN_HOLD_MS` | `2000` | Command 按住多久才触发 |
-| `CCVS_SUBMIT_DELAY_MS` | `900` | 松开后等待多久再发送 Return |
+| `CCVS_SUBMIT_DELAY_MS` | `2000` | 松开后等待多久再发送 Return |
 | `CCVS_TRIGGER_MODIFIER` | `command` | 触发修饰键，可选 `command` / `control` / `option` / `shift` |
 | `CCVS_TRIGGER_SIDE` | `left` | 触发键侧，可选 `left` / `right` / `any` |
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
@@ -152,9 +152,9 @@ Full installation instructions for another Mac are available in [INSTALL.md](INS
 - The modifier must be held by itself for at least `2000ms` by default.
 - If another normal key is pressed while holding the modifier, the gesture is treated as a normal shortcut and will not auto-send.
 - The frontmost app must match the configured app names or bundle identifiers.
-- After release, the helper waits `900ms` by default before sending `Return`.
+- After release, the helper shows a short toast and waits `2000ms` by default before sending `Return`.
 - Press `Escape` while holding the trigger key, or during the post-release delay, to cancel auto-send.
-- A short toast hint is shown after the hold threshold. The default hint is `Esc 取消自动发送`, and it auto-hides after `1200ms`.
+- No hint is shown while holding the trigger key. A short toast appears only after release when the gesture is eligible to auto-send. The default hint is `Esc 取消自动发送`, and it auto-hides after `1200ms`.
 
 ### Quick Start
 
@@ -187,7 +187,7 @@ Common options:
 | Variable | Default | Description |
 | --- | --- | --- |
 | `CCVS_MIN_HOLD_MS` | `2000` | Minimum hold duration before the gesture can trigger |
-| `CCVS_SUBMIT_DELAY_MS` | `900` | Delay after release before sending `Return` |
+| `CCVS_SUBMIT_DELAY_MS` | `2000` | Delay after release before sending `Return` |
 | `CCVS_TRIGGER_MODIFIER` | `command` | Trigger modifier: `command`, `control`, `option`, or `shift` |
 | `CCVS_TRIGGER_SIDE` | `left` | Trigger side: `left`, `right`, or `any` |
 | `CCVS_SUBMIT_KEY` | `return` | Key to auto-send: `return`, `tab`, `space`, or `escape` |

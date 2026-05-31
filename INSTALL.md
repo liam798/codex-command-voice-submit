@@ -199,14 +199,14 @@ tail -80 ~/Library/Logs/codex-voice-auto-send.log
 2. 聚焦输入框。
 3. 长按配置的触发键进行语音输入。默认是左侧 `Command`；如果安装时设置了 `CCVS_TRIGGER_SIDE=right`，则使用右侧 `Command`。
 4. 松开 `Command`。
-5. 工具会默认等待 `900ms`，然后自动发送 `Return`。
+5. 工具会显示短 Toast，并默认等待 `2000ms`，然后自动发送 `Return`。
 
 如果识别过程中说错了，或者松开后想取消本次自动发送，按 `Escape`。取消键在两种时机都有效：
 
 - 仍按住触发键时
-- 松开触发键后的 `900ms` 等待窗口内
+- 松开触发键后的 `2000ms` 等待窗口内
 
-达到触发时长后，默认会显示一个短 Toast 提示，并自动消失，不会在松开后的发送等待期间常驻遮挡输入框：
+长按期间不会显示提示；松开并确认满足触发条件后，默认会显示一个短 Toast 提示，并自动消失：
 
 ```text
 Esc 取消自动发送
@@ -268,7 +268,7 @@ make install
 | 变量 | 默认值 | 说明 |
 | --- | --- | --- |
 | `CCVS_MIN_HOLD_MS` | `2000` | Command 按住多久才触发 |
-| `CCVS_SUBMIT_DELAY_MS` | `900` | 松开后等待多久再发送 Return |
+| `CCVS_SUBMIT_DELAY_MS` | `2000` | 松开后等待多久再发送 Return |
 | `CCVS_TRIGGER_MODIFIER` | `command` | 触发修饰键，可选 `command` / `control` / `option` / `shift` |
 | `CCVS_TRIGGER_SIDE` | `left` | 触发键侧，可选 `left` / `right` / `any` |
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
