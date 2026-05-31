@@ -19,16 +19,17 @@ struct Config {
 
     static func load() -> Config {
         let env = ProcessInfo.processInfo.environment
+        let submitDelayMs = intValue(env["CCVS_SUBMIT_DELAY_MS"], defaultValue: 2000)
         return Config(
             minHoldMs: intValue(env["CCVS_MIN_HOLD_MS"], defaultValue: 2000),
-            submitDelayMs: intValue(env["CCVS_SUBMIT_DELAY_MS"], defaultValue: 2000),
+            submitDelayMs: submitDelayMs,
             triggerModifier: Modifier.parse(env["CCVS_TRIGGER_MODIFIER"]) ?? .command,
             triggerSide: TriggerSide.parse(env["CCVS_TRIGGER_SIDE"]) ?? .left,
             submitKey: KeyboardKey.parse(env["CCVS_SUBMIT_KEY"]) ?? .returnKey,
             cancelKey: KeyboardKey.parseOptional(env["CCVS_CANCEL_KEY"], defaultValue: .escape),
             showHint: boolValue(env["CCVS_SHOW_HINT"], defaultValue: true),
             hintText: stringValue(env["CCVS_HINT_TEXT"], defaultValue: defaultHintText(cancelKey: KeyboardKey.parseOptional(env["CCVS_CANCEL_KEY"], defaultValue: .escape))),
-            hintDurationMs: intValue(env["CCVS_HINT_DURATION_MS"], defaultValue: 1200),
+            hintDurationMs: intValue(env["CCVS_HINT_DURATION_MS"], defaultValue: submitDelayMs),
             appNamePatterns: listValue(env["CCVS_APP_NAMES"], defaultValue: ["Codex", "Code X", "CodeX"]),
             bundleIdPatterns: listValue(env["CCVS_BUNDLE_IDS"], defaultValue: ["com.openai.codex", "com.openai.chatgpt"]),
             dryRun: boolValue(env["CCVS_DRY_RUN"], defaultValue: false),
@@ -608,7 +609,7 @@ if arguments.contains("--help") || arguments.contains("-h") {
       CCVS_CANCEL_KEY        默认 escape，可选 return/tab/space/escape/none
       CCVS_SHOW_HINT         默认 1
       CCVS_HINT_TEXT         默认按取消键生成提示文案
-      CCVS_HINT_DURATION_MS  默认 1200
+      CCVS_HINT_DURATION_MS  默认跟随 CCVS_SUBMIT_DELAY_MS
       CCVS_APP_NAMES         默认 Codex,Code X,CodeX
       CCVS_BUNDLE_IDS        默认 com.openai.codex,com.openai.chatgpt
       CCVS_VERBOSE           默认 0

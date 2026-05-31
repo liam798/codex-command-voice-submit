@@ -127,7 +127,7 @@ make install
 | `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
 | `CCVS_SHOW_HINT` | `1` | 是否显示取消提示浮层 |
 | `CCVS_HINT_TEXT` | `Esc 取消自动发送` | 自定义提示文案 |
-| `CCVS_HINT_DURATION_MS` | `1200` | Toast 提示显示多久后自动隐藏 |
+| `CCVS_HINT_DURATION_MS` | 跟随 `CCVS_SUBMIT_DELAY_MS` | Toast 提示显示多久后自动隐藏 |
 | `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | 前台应用名称匹配，逗号分隔 |
 | `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | 前台应用 bundle id 匹配，逗号分隔 |
 | `CCVS_VERBOSE` | `0` | 是否输出调试日志 |
@@ -154,7 +154,7 @@ Full installation instructions for another Mac are available in [INSTALL.md](INS
 - The frontmost app must match the configured app names or bundle identifiers.
 - After release, the helper shows a short toast and waits `2000ms` by default before sending `Return`.
 - Press `Escape` while holding the trigger key, or during the post-release delay, to cancel auto-send.
-- No hint is shown while holding the trigger key. A short toast appears only after release when the gesture is eligible to auto-send. The default hint is `Esc 取消自动发送`, and it auto-hides after `1200ms`.
+- No hint is shown while holding the trigger key. A short toast appears only after release when the gesture is eligible to auto-send. The default hint is `Esc 取消自动发送`, and the toast duration follows `CCVS_SUBMIT_DELAY_MS`.
 
 ### Quick Start
 
@@ -194,6 +194,6 @@ Common options:
 | `CCVS_CANCEL_KEY` | `escape` | Key used to cancel auto-send; set to `none` to disable |
 | `CCVS_SHOW_HINT` | `1` | Whether to show the toast hint |
 | `CCVS_HINT_TEXT` | `Esc 取消自动发送` | Custom hint text |
-| `CCVS_HINT_DURATION_MS` | `1200` | Toast auto-hide duration |
+| `CCVS_HINT_DURATION_MS` | follows `CCVS_SUBMIT_DELAY_MS` | Toast auto-hide duration |
 | `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | Comma-separated frontmost app name patterns |
 | `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | Comma-separated bundle id patterns |
