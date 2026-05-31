@@ -209,7 +209,7 @@ tail -80 ~/Library/Logs/codex-voice-auto-send.log
 达到触发时长后，默认会显示一个短 Toast 提示，并自动消失，不会在松开后的发送等待期间常驻遮挡输入框：
 
 ```text
-Esc 取消发送
+Esc 取消自动发送
 ```
 
 默认保护逻辑：
@@ -250,7 +250,7 @@ CCVS_CANCEL_KEY=none make install
 配置或关闭提示浮层：
 
 ```bash
-CCVS_HINT_TEXT='Esc 取消发送' make install
+CCVS_HINT_TEXT='Esc 取消自动发送' make install
 CCVS_HINT_DURATION_MS=800 make install
 CCVS_SHOW_HINT=0 make install
 ```
@@ -274,7 +274,7 @@ make install
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
 | `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
 | `CCVS_SHOW_HINT` | `1` | 是否显示取消提示浮层 |
-| `CCVS_HINT_TEXT` | `Esc 取消发送` | 自定义提示文案 |
+| `CCVS_HINT_TEXT` | `Esc 取消自动发送` | 自定义提示文案 |
 | `CCVS_HINT_DURATION_MS` | `1200` | Toast 提示显示多久后自动隐藏 |
 | `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | 前台应用名称匹配，逗号分隔 |
 | `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | 前台应用 bundle id 匹配，逗号分隔 |

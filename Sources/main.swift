@@ -585,7 +585,7 @@ private func defaultHintText(cancelKey: KeyboardKey?) -> String {
     guard let cancelKey else {
         return ""
     }
-    return "\(displayName(for: cancelKey)) 取消发送"
+    return "\(displayName(for: cancelKey)) 取消自动发送"
 }
 
 private func displayName(for key: KeyboardKey) -> String {

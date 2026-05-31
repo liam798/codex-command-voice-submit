@@ -2,6 +2,8 @@
 
 一个 macOS 本机辅助进程：当前台应用是 Codex / Code X 时，长按指定修饰键后松开，会在短暂延迟后自动发送 `Return`，用于把语音输入完成后的文本发出去。
 
+English: A small macOS helper for Codex / Code X. Hold a configurable modifier key while dictating, release it, and the helper sends `Return` after a short delay. You can press the cancel key before auto-send.
+
 另一台 Mac 的完整安装步骤见 [INSTALL.md](INSTALL.md)。
 
 生成可分发压缩包：
@@ -20,7 +22,7 @@
 - 只在前台应用名称或 bundle id 匹配 Codex / Code X 时触发。
 - 松开后默认等待 `900ms` 再发送 `Return`，给语音输入一点落字时间。
 - 默认按 `Escape` 可取消本次自动发送：按住触发键期间或松开后的等待窗口内都有效。
-- 达到触发时长后默认显示短 Toast：`Esc 取消发送`，Toast 会自动消失，不会在发送等待期间常驻遮挡输入框。
+- 达到触发时长后默认显示短 Toast：`Esc 取消自动发送`，Toast 会自动消失，不会在发送等待期间常驻遮挡输入框。
 
 ## 构建
 
@@ -100,7 +102,7 @@ CCVS_CANCEL_KEY=none make install
 配置或关闭提示浮层：
 
 ```bash
-CCVS_HINT_TEXT='Esc 取消发送' make install
+CCVS_HINT_TEXT='Esc 取消自动发送' make install
 CCVS_HINT_DURATION_MS=800 make install
 CCVS_SHOW_HINT=0 make install
 ```
@@ -124,7 +126,7 @@ make install
 | `CCVS_SUBMIT_KEY` | `return` | 自动发送的按键，可选 `return` / `tab` / `space` / `escape` |
 | `CCVS_CANCEL_KEY` | `escape` | 取消本次自动发送的按键，可选 `return` / `tab` / `space` / `escape` / `none` |
 | `CCVS_SHOW_HINT` | `1` | 是否显示取消提示浮层 |
-| `CCVS_HINT_TEXT` | `Esc 取消发送` | 自定义提示文案 |
+| `CCVS_HINT_TEXT` | `Esc 取消自动发送` | 自定义提示文案 |
 | `CCVS_HINT_DURATION_MS` | `1200` | Toast 提示显示多久后自动隐藏 |
 | `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | 前台应用名称匹配，逗号分隔 |
 | `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | 前台应用 bundle id 匹配，逗号分隔 |
@@ -136,3 +138,62 @@ make install
 ```bash
 make uninstall
 ```
+
+## English
+
+Codex Voice Auto Send is a local macOS helper for voice input in Codex / Code X. When the frontmost app matches Codex / Code X, hold a configured modifier key, release it after dictation, and the helper automatically sends `Return` after a short delay.
+
+Full installation instructions for another Mac are available in [INSTALL.md](INSTALL.md).
+
+### Behavior
+
+- The trigger modifier defaults to `Command`; the trigger side can be `left`, `right`, or `any`.
+- The installed local configuration currently uses the right `Command` key.
+- The modifier must be held by itself for at least `2000ms` by default.
+- If another normal key is pressed while holding the modifier, the gesture is treated as a normal shortcut and will not auto-send.
+- The frontmost app must match the configured app names or bundle identifiers.
+- After release, the helper waits `900ms` by default before sending `Return`.
+- Press `Escape` while holding the trigger key, or during the post-release delay, to cancel auto-send.
+- A short toast hint is shown after the hold threshold. The default hint is `Esc 取消自动发送`, and it auto-hides after `1200ms`.
+
+### Quick Start
+
+```bash
+make build
+make install
+```
+
+macOS permissions are required:
+
+- System Settings -> Privacy & Security -> Accessibility
+- System Settings -> Privacy & Security -> Input Monitoring
+
+Check configuration and permission state:
+
+```bash
+~/.local/bin/codex-voice-auto-send --check
+```
+
+### Configuration
+
+Set environment variables when installing:
+
+```bash
+CCVS_TRIGGER_SIDE=right CCVS_MIN_HOLD_MS=2000 make install
+```
+
+Common options:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `CCVS_MIN_HOLD_MS` | `2000` | Minimum hold duration before the gesture can trigger |
+| `CCVS_SUBMIT_DELAY_MS` | `900` | Delay after release before sending `Return` |
+| `CCVS_TRIGGER_MODIFIER` | `command` | Trigger modifier: `command`, `control`, `option`, or `shift` |
+| `CCVS_TRIGGER_SIDE` | `left` | Trigger side: `left`, `right`, or `any` |
+| `CCVS_SUBMIT_KEY` | `return` | Key to auto-send: `return`, `tab`, `space`, or `escape` |
+| `CCVS_CANCEL_KEY` | `escape` | Key used to cancel auto-send; set to `none` to disable |
+| `CCVS_SHOW_HINT` | `1` | Whether to show the toast hint |
+| `CCVS_HINT_TEXT` | `Esc 取消自动发送` | Custom hint text |
+| `CCVS_HINT_DURATION_MS` | `1200` | Toast auto-hide duration |
+| `CCVS_APP_NAMES` | `Codex,Code X,CodeX` | Comma-separated frontmost app name patterns |
+| `CCVS_BUNDLE_IDS` | `com.openai.codex,com.openai.chatgpt` | Comma-separated bundle id patterns |
